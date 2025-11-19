@@ -52,13 +52,6 @@ class PassportBiz extends BaseBiz {
 		return token.id || '';
 	}
 
-	// 获取user name 
-	static getUserName() {
-		let token = cacheHelper.get(constants.CACHE_TOKEN);
-		if (!token) return '';
-		return token.name || '';
-	}
-
 	static getStatus() {
 		let token = cacheHelper.get(constants.CACHE_TOKEN);
 		if (!token) return -1;

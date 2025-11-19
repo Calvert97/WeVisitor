@@ -105,23 +105,21 @@ class PassportService extends BaseProjectService {
 
 	}
 
-	/** 登录 */
-	async login(userId) {
+		/** 登录 */
+		async login(userId) {
 
-		let where = {
-			'USER_MINI_OPENID': userId
-		};
-		let fields = 'USER_ID,USER_MINI_OPENID,USER_NAME,USER_PIC,USER_STATUS';
-		let user = await UserModel.getOne(where, fields);
-		let token = {};
-		if (user) {
+			let where = {
+				'USER_MINI_OPENID': userId
+			};
+			let fields = 'USER_ID,USER_MINI_OPENID,USER_STATUS';
+			let user = await UserModel.getOne(where, fields);
+			let token = {};
+			if (user) {
 
-			// 正常用户
-			token.id = user.USER_MINI_OPENID;
-			token.key = user.USER_ID;
-			token.name = user.USER_NAME;
-			token.pic = user.USER_PIC;
-			token.status = user.USER_STATUS;
+				// 正常用户
+				token.id = user.USER_MINI_OPENID;
+				token.key = user.USER_ID;
+				token.status = user.USER_STATUS;
 
 			// 异步更新最近更新时间
 			let dataUpdate = {
