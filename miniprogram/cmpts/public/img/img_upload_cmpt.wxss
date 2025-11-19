@@ -1,12 +1,55 @@
-@import "../../../style/base/comm.wxss"; 
-@import "../../../style/public/project.wxss";  
+@import "../../../style/base/comm.wxss";
+@import "../../../style/public/project.wxss";
 
-.form-group .upload-img .img-no {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    border-top-left-radius: 6rpx;
-    padding: 6rpx 12rpx;
-    height: 35rpx;
-    opacity: .9;
+.sign-wrap {
+        position: relative;
+        border: 1px dashed #dcdcdc;
+        border-radius: 12rpx;
+        padding: 20rpx;
+        background-color: #fff;
+}
+
+.sign-canvas {
+        width: 100%;
+        height: 300rpx;
+        background-color: #fdfdfd;
+}
+
+.sign-placeholder {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        color: #999;
+        font-size: 26rpx;
+        pointer-events: none;
+}
+
+.sign-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 20rpx;
+        gap: 20rpx;
+}
+
+.sign-actions .btn {
+        padding: 0 32rpx;
+}
+
+.sign-actions .btn-primary {
+        background-color: var(--theme-color);
+        color: #fff;
+}
+
+.sign-preview {
+        margin-top: 30rpx;
+        text-align: center;
+        color: #888;
+}
+
+.sign-preview image {
+        width: 100%;
+        border-radius: 12rpx;
+        border: 1px solid #f0f0f0;
+        margin-bottom: 12rpx;
 }

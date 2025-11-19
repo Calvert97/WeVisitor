@@ -1,156 +1,130 @@
-﻿const pageHelper = require('../../../helper/page_helper.js');
-const contentCheckHelper = require('../../../helper/content_check_helper.js');
-const setting = require('../../../setting/setting.js');
+const pageHelper = require('../../../helper/page_helper.js');
 
 Component({
-	options: {
-		addGlobalClass: true
-	},
-	
-	/**
-	 * 组件的属性列表
-	 */
-	properties: {
-		imgList: {
-			type: Array,
-			value: []
+        options: {
+                addGlobalClass: true
+        },
 
-		},
-		imgMax: {
-			type: Number,
-			value: 4,
-		},
-		title: {
-			type: String,
-			value: '图片上传',
-		},
-		must: { //是否必填
-			type: Boolean,
-			value: true,
-		},
-		isCheck: { //是否做图片内容校验
-			type: Boolean,
-			value: true,
-		},
-		isShowNo: { //是否显示序号
-			type: Boolean,
-			value: false,
-		},
-		imgUploadSize: { //图片最大大小
-			type: Number,
-			value: setting.IMG_UPLOAD_SIZE,
-		},
-		isShowSize: { //是否提示图片尺寸
-			type: Boolean,
-			value: true,
-		}
-	},
+        properties: {
+                imgList: {
+                        type: Array,
+                        value: []
 
-	/**
-	 * 组件的初始数据
-	 */
-	data: {
-		//imgList:[]
-	},
+                },
+                title: {
+                        type: String,
+                        value: '签字',
+                },
+                must: { //是否必填
+                        type: Boolean,
+                        value: true,
+                }
+        },
 
+        data: {
+                isDrawing: false,
+                hasDrawn: false
+        },
 
-	/**
-	 * 生命周期方法
-	 */
-	lifetimes: {
-		attached: function () {
+        lifetimes: {
+                ready: function () {
+                        this._ctx = wx.createCanvasContext('signCanvas', this);
+                        this._ctx.setStrokeStyle('#333333');
+                        this._ctx.setLineWidth(4);
+                        this._ctx.setLineCap('round');
+                        this._ctx.setLineJoin('round');
 
-		},
+                        this._bounding = { left: 0, top: 0 };
+                        this._canvasSize = { width: 0, height: 0 };
+                        const query = this.createSelectorQuery().in(this);
+                        query.select('#signCanvas').boundingClientRect((rect) => {
+                                if (rect) {
+                                        this._bounding = { left: rect.left, top: rect.top };
+                                        this._canvasSize = { width: rect.width, height: rect.height };
+                                }
+                        }).exec();
+                },
+                detached: function () {
+                        this._ctx = null;
+                },
+        },
 
-		ready: function () {
+        methods: {
+                _getPoint(e) {
+                        const touch = e.changedTouches[0];
+                        const x = touch.x || touch.pageX;
+                        const y = touch.y || touch.pageY;
+                        const bounding = this._bounding || { left: 0, top: 0 };
+                        return {
+                                x: x - bounding.left,
+                                y: y - bounding.top
+                        };
+                },
 
-		},
-		detached: function () {
-			// 在组件实例被从页面节点树移除时执行
-		},
-	},
+                bindStartSign: function (e) {
+                        if (!this._ctx) return;
+                        const point = this._getPoint(e);
+                        this._ctx.beginPath();
+                        this._ctx.moveTo(point.x, point.y);
+                        this.setData({
+                                isDrawing: true,
+                                hasDrawn: true
+                        });
+                },
 
-	/**
-	 * 组件的方法列表
-	 */
-	methods: {
-		/**
-		 * 选择上传图片 
-		 */
-		bindChooseImgTap: function (e) {
-			wx.chooseMedia({
-				count: this.data.imgMax - this.data.imgList.length, //默认9
-				mediaType: ['image'],
-				sizeType: ['compressed'], //可以指定是原图还是压缩图，默认二者都有
-				sourceType: ['album', 'camera'], //从相册选择
-				success: async (res) => {
-					wx.showLoading({
-						title: '图片校验中',
-						mask: true
-					});
+                bindMoveSign: function (e) {
+                        if (!this.data.isDrawing || !this._ctx) return;
+                        const point = this._getPoint(e);
+                        this._ctx.lineTo(point.x, point.y);
+                        this._ctx.stroke();
+                        this._ctx.draw(true);
+                },
 
-					for (let k = 0; k < res.tempFiles.length; k++) {
-						let size = res.tempFiles[k].size;
-						let path = res.tempFiles[k].tempFilePath;
-						if (!contentCheckHelper.imgTypeCheck(path)) {
-							wx.hideLoading();
-							return pageHelper.showNoneToast('只能上传png、jpg、jpeg格式', 3000);
-						}
+                bindEndSign: function () {
+                        this.setData({
+                                isDrawing: false
+                        });
+                },
 
-						let imageMaxSize = 1024 * 1000 * this.data.imgUploadSize;
-						if (!contentCheckHelper.imgSizeCheck(size, imageMaxSize)) {
-							wx.hideLoading();
-							return pageHelper.showNoneToast('单张图片大小不能超过 ' + this.data.imgUploadSize + 'M', 3000);
-						}
+                bindClearSign: function () {
+                        if (!this._ctx) return;
+                        const canvasSize = this._canvasSize || { width: 0, height: 0 };
+                        const width = canvasSize.width;
+                        const height = canvasSize.height;
+                        this._ctx.clearRect(0, 0, width, height);
+                        this._ctx.draw();
+                        this.setData({
+                                hasDrawn: false,
+                                imgList: []
+                        });
+                        this.triggerEvent('upload', this.data.imgList);
+                },
 
+                bindSaveSign: function () {
+                        if (!this.data.hasDrawn) {
+                                return pageHelper.showNoneToast('请先完成签字');
+                        }
+                        wx.canvasToTempFilePath({
+                                canvasId: 'signCanvas',
+                                success: (res) => {
+                                        this.setData({
+                                                imgList: [res.tempFilePath]
+                                        });
+                                        this.triggerEvent('upload', this.data.imgList);
+                                        pageHelper.showSuccToast('签字已保存');
+                                },
+                                fail: () => {
+                                        pageHelper.showNoneToast('签字保存失败，请重试');
+                                }
+                        }, this);
+                },
 
-						//  读取文件流，云校验 
-						//let imgData = wx.getFileSystemManager().readFileSync(path, 'base64');
-
-						//console.log('imgData size=' + imgData.length);
-
-						if (this.data.isCheck) {
-							let check = await contentCheckHelper.imgCheck(path);
-							if (!check) {
-								wx.hideLoading();
-								return pageHelper.showNoneToast('存在不合适的图片, 已屏蔽', 3000);
-							}
-						}
-
-
-						this.setData({
-							imgList: this.data.imgList.concat(path)
-						});
-						this.triggerEvent('upload', this.data.imgList);
-
-					}
-
-					wx.hideLoading();
-				}
-			});
-		},
-
-		bindPreviewImgTap: function (e) {
-			wx.previewImage({
-				urls: this.data.imgList,
-				current: e.currentTarget.dataset.url
-			});
-		},
-
-		/**
-		 * 	删除图片 
-		 */
-		catchDelImgTap: function (e) {
-			let that = this;
-			let callback = function () {
-				that.data.imgList.splice(e.currentTarget.dataset.index, 1);
-				that.setData({
-					imgList: that.data.imgList
-				});
-				that.triggerEvent('upload', that.data.imgList);
-			}
-			pageHelper.showConfirm('确定要删除该图片吗？', callback);
-		},
-
-	}
-})
+                bindPreviewImgTap: function () {
+                        if (!this.data.imgList.length) return;
+                        wx.previewImage({
+                                urls: this.data.imgList,
+                                current: this.data.imgList[0]
+                        });
+                }
+        }
+});
