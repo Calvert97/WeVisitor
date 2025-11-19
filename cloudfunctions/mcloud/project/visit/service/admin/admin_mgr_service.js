@@ -156,7 +156,15 @@ class AdminMgrService extends BaseProjectAdminService {
 
 	/** 删除管理员 */
 	async delMgr(id, myAdminId) {
-		this.AppError('[访客]该功能暂不开放，如有需要请加作者微信：cclinux0730');
+		let mgr = await AdminModel.getOne(id, 'ADMIN_NAME,ADMIN_DESC,ADMIN_TYPE');
+		if (!mgr)
+			this.AppError('管理员不存在');
+		if (mgr._id == myAdminId)
+			this.AppError('不能删除当前登录账号');
+		if (mgr.ADMIN_TYPE == 1)
+			this.AppError('不能删除超级管理员');
+
+		await AdminModel.del(id);
 	}
 
 	/** 添加新的管理员 */
@@ -168,27 +176,39 @@ class AdminMgrService extends BaseProjectAdminService {
 		password,
 		dept
 	}) {
-		this.AppError('[访客]该功能暂不开放，如有需要请加作者微信：cclinux0730');
+		let cnt = await AdminModel.count({ ADMIN_NAME: name });
+		if (cnt > 0)
+			this.AppError('该账号已存在');
 
+		let data = {
+			ADMIN_NAME: name,
+			ADMIN_TYPE: Number(type),
+			ADMIN_DESC: desc,
+			ADMIN_PHONE: phone || '',
+			ADMIN_PASSWORD: md5Lib.md5(password),
+			ADMIN_DEPT: Array.isArray(dept) ? dept : []
+		};
+
+		let id = await AdminModel.insert(data);
+		return { id };
 	}
 
 	/** 修改状态 */
 	async statusMgr(id, status, myAdminId) {
-		this.AppError('[访客]该功能暂不开放，如有需要请加作者微信：cclinux0730');
-	}
+		let mgr = await AdminModel.getOne(id, 'ADMIN_STATUS,ADMIN_TYPE,ADMIN_NAME');
+		if (!mgr)
+			this.AppError('管理员不存在');
+		if (mgr.ADMIN_TYPE == 1 && status == 0)
+			this.AppError('不能禁用超级管理员');
 
-
-	/** 获取管理员信息 */
-	async getMgrDetail(id) {
-		let fields = '*';
-
-		let where = {
-			_id: id
+		let data = {
+			ADMIN_STATUS: status
+		};
+		if (status == 0) {
+			data.ADMIN_TOKEN = '';
+			data.ADMIN_TOKEN_TIME = 0;
 		}
-		let mgr = await AdminModel.getOne(where, fields);
-		if (!mgr) return null;
-
-		return mgr;
+		await AdminModel.edit(id, data);
 	}
 
 	/** 修改管理员 */
@@ -200,14 +220,55 @@ class AdminMgrService extends BaseProjectAdminService {
 		password,
 		dept
 	}) {
+		let mgr = await AdminModel.getOne(id, 'ADMIN_NAME,ADMIN_TYPE');
+		if (!mgr)
+			this.AppError('管理员不存在');
+		if (mgr.ADMIN_TYPE == 1 && Number(type) != 1)
+			this.AppError('不能修改超级管理员类型');
 
-		this.AppError('[访客]该功能暂不开放，如有需要请加作者微信：cclinux0730');
+		let whereName = {
+			ADMIN_NAME: name,
+			_id: ['<>', id]
+		};
+		let cnt = await AdminModel.count(whereName);
+		if (cnt > 0)
+			this.AppError('该账号已存在');
+
+		let data = {
+			ADMIN_NAME: name,
+			ADMIN_TYPE: Number(type),
+			ADMIN_DESC: desc,
+			ADMIN_PHONE: phone || '',
+			ADMIN_DEPT: Array.isArray(dept) ? dept : []
+		};
+		if (password)
+			data.ADMIN_PASSWORD = md5Lib.md5(password);
+
+		await AdminModel.edit(id, data);
 	}
 
 	/** 修改自身密码 */
 	async pwdtMgr(adminId, oldPassword, password) {
+		let admin = await AdminModel.getOne(adminId, 'ADMIN_PASSWORD,ADMIN_NAME');
+		if (!admin)
+			this.AppError('管理员不存在');
+		if (admin.ADMIN_PASSWORD != md5Lib.md5(oldPassword))
+			this.AppError('旧密码不正确');
 
-		this.AppError('[访客]该功能暂不开放，如有需要请加作者微信：cclinux0730');
+		await AdminModel.edit(adminId, { ADMIN_PASSWORD: md5Lib.md5(password) });
+	}
+
+	/** 获取管理员信息 */
+	async getMgrDetail(id) {
+		let fields = '*';
+
+		let where = {
+			_id: id
+		};
+		let mgr = await AdminModel.getOne(where, fields);
+		if (!mgr) return null;
+
+		return mgr;
 	}
 }
 

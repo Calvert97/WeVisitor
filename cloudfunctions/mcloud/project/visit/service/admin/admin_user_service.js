@@ -10,8 +10,8 @@ const util = require('../../../../framework/utils/util.js');
 const exportUtil = require('../../../../framework/utils/export_util.js');
 const timeUtil = require('../../../../framework/utils/time_util.js');
 const dataUtil = require('../../../../framework/utils/data_util.js');
+const cloudUtil = require('../../../../framework/cloud/cloud_util.js');
 const UserModel = require('../../model/user_model.js');
-const AdminHomeService = require('./admin_home_service.js');
 
 // 导出用户数据KEY
 const EXPORT_USER_DATA_KEY = 'EXPORT_USER_DATA';
@@ -88,12 +88,31 @@ class AdminUserService extends BaseProjectAdminService {
 	}
 
 	async statusUser(id, status, reason) {
-		this.AppError('[访客]该功能暂不开放，如有需要请加作者微信：cclinux0730');
+		let where = { USER_MINI_OPENID: id };
+		let user = await UserModel.getOne(where, 'USER_STATUS');
+		if (!user)
+			this.AppError('用户不存在');
+		status = Number(status);
+		let data = {
+			USER_STATUS: status
+		};
+		if (status == UserModel.STATUS.UNCHECK)
+			data.USER_CHECK_REASON = reason || '';
+		else if (status == UserModel.STATUS.FORBID)
+			data.USER_CHECK_REASON = reason || '';
+		else
+			data.USER_CHECK_REASON = '';
+		await UserModel.edit(where, data);
 	}
 
 	/**删除用户 */
 	async delUser(id) {
-		this.AppError('[访客]该功能暂不开放，如有需要请加作者微信：cclinux0730');
+		let where = { USER_MINI_OPENID: id };
+		let user = await UserModel.getOne(where, 'USER_FORMS');
+		if (!user)
+			this.AppError('用户不存在');
+		await UserModel.del(where);
+		await cloudUtil.handlerCloudFilesForForms(user.USER_FORMS || [], []);
 
 	}
 
@@ -112,10 +131,72 @@ class AdminUserService extends BaseProjectAdminService {
 	/**导出用户数据 */
 	async exportUserDataExcel(condition, fields) {
 
-		this.AppError('[访客]该功能暂不开放，如有需要请加作者微信：cclinux0730');
+		let where = {};
+		if (condition) {
+			try {
+				where = JSON.parse(decodeURIComponent(condition));
+			} catch (err) {
+				where = {};
+			}
+		}
+		if (!where || Object.keys(where).length == 0) {
+			where = {
+				and: {
+					_pid: this.getProjectId()
+				}
+			};
+		}
+
+		let orderBy = { USER_ADD_TIME: 'desc' };
+		let list = await UserModel.getAllBig(where, 'USER_NAME,USER_MOBILE,USER_STATUS,USER_ADD_TIME,USER_LOGIN_TIME,USER_FORMS', orderBy);
+
+		if (!Array.isArray(fields)) fields = [];
+		let fieldMarks = [];
+		let header = ['用户昵称', '联系电话'];
+		for (let item of fields) {
+			if (!item || !item.mark) continue;
+			fieldMarks.push(item.mark);
+			header.push(item.title || item.mark);
+		}
+		header.push('状态');
+		header.push('注册时间');
+		header.push('最近登录时间');
+
+		let data = [header];
+		for (let item of list) {
+			let row = [];
+			row.push(item.USER_NAME || '');
+			row.push(item.USER_MOBILE || '');
+			for (let mark of fieldMarks) {
+				row.push(this._getFormValue(item.USER_FORMS || [], mark));
+			}
+			row.push(UserModel.getDesc('STATUS', item.USER_STATUS));
+			row.push(timeUtil.timestamp2Time(item.USER_ADD_TIME, 'Y-M-D h:m'));
+			row.push(item.USER_LOGIN_TIME ? timeUtil.timestamp2Time(item.USER_LOGIN_TIME, 'Y-M-D h:m') : '未登录');
+			data.push(row);
+		}
+
+		let options = {
+			'!cols': header.map(() => ({ wch: 20 }))
+		};
+
+		return await exportUtil.exportDataExcel(EXPORT_USER_DATA_KEY, '用户数据', list.length, data, options);
 
 	}
 
 }
+
+AdminUserService.prototype._getFormValue = function (forms, mark) {
+	if (!forms) return '';
+	for (let item of forms) {
+		if (item.mark == mark) {
+			if (item.type == 'image') return '[图片]';
+			if (item.type == 'content') return '[图文内容]';
+			if (item.type == 'switch') return item.val === true ? '是' : '否';
+			return item.val === undefined || item.val === null ? '' : item.val;
+		}
+	}
+	return '';
+};
 
 module.exports = AdminUserService;
