@@ -29,10 +29,13 @@ Component({
         lifetimes: {
                 ready: function () {
                         this._ctx = wx.createCanvasContext('signCanvas', this);
-                        this._ctx.setStrokeStyle('#333333');
-                        this._ctx.setLineWidth(4);
-                        this._ctx.setLineCap('round');
-                        this._ctx.setLineJoin('round');
+                        this._penStyle = {
+                                color: '#333333',
+                                width: 4,
+                                cap: 'round',
+                                join: 'round'
+                        };
+                        this._applyPenStyle();
                         this._lastPoint = null;
 
                         this._bounding = { left: 0, top: 0 };
@@ -78,6 +81,7 @@ Component({
 
                 bindStartSign: function (e) {
                         if (!this._ctx) return;
+                        this._applyPenStyle();
                         const point = this._getPoint(e);
                         this._ctx.beginPath();
                         this._ctx.moveTo(point.x, point.y);
@@ -114,6 +118,7 @@ Component({
                         const height = canvasSize.height;
                         this._ctx.clearRect(0, 0, width, height);
                         this._ctx.draw();
+                        this._applyPenStyle();
                         this._lastPoint = null;
                         this.setData({
                                 hasDrawn: false,
@@ -147,6 +152,19 @@ Component({
                                 urls: this.data.imgList,
                                 current: this.data.imgList[0]
                         });
+                },
+
+                _applyPenStyle: function () {
+                        if (!this._ctx) return;
+                        const penStyle = this._penStyle || {};
+                        const color = penStyle.color || '#333333';
+                        const width = penStyle.width || 4;
+                        const cap = penStyle.cap || 'round';
+                        const join = penStyle.join || 'round';
+                        this._ctx.setStrokeStyle(color);
+                        this._ctx.setLineWidth(width);
+                        this._ctx.setLineCap(cap);
+                        this._ctx.setLineJoin(join);
                 },
 
                 _getData: function () {
