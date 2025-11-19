@@ -36,13 +36,18 @@ Component({
 
                         this._bounding = { left: 0, top: 0 };
                         this._canvasSize = { width: 0, height: 0 };
+                        this._scrollOffset = { scrollLeft: 0, scrollTop: 0 };
                         const query = this.createSelectorQuery().in(this);
                         query.select('#signCanvas').boundingClientRect((rect) => {
                                 if (rect) {
                                         this._bounding = { left: rect.left, top: rect.top };
                                         this._canvasSize = { width: rect.width, height: rect.height };
                                 }
-                        }).exec();
+                        });
+                        query.selectViewport().scrollOffset((res) => {
+                                if (res) this._scrollOffset = res;
+                        });
+                        query.exec();
                 },
                 detached: function () {
                         this._ctx = null;
@@ -51,13 +56,22 @@ Component({
 
         methods: {
                 _getPoint(e) {
-                        const touch = e.changedTouches[0];
-                        const x = touch.x || touch.pageX;
-                        const y = touch.y || touch.pageY;
+                        const touch = (e && e.changedTouches && e.changedTouches[0]) || {};
                         const bounding = this._bounding || { left: 0, top: 0 };
+                        const scrollOffset = this._scrollOffset || { scrollLeft: 0, scrollTop: 0 };
+
+                        if (typeof touch.x === 'number' && typeof touch.y === 'number') {
+                                return {
+                                        x: touch.x,
+                                        y: touch.y
+                                };
+                        }
+
+                        const pageX = typeof touch.pageX === 'number' ? touch.pageX : 0;
+                        const pageY = typeof touch.pageY === 'number' ? touch.pageY : 0;
                         return {
-                                x: x - bounding.left,
-                                y: y - bounding.top
+                                x: pageX - bounding.left - scrollOffset.scrollLeft,
+                                y: pageY - bounding.top - scrollOffset.scrollTop
                         };
                 },
 
