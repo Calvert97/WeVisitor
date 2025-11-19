@@ -1,17 +1,30 @@
 @import "../../../style/base/comm.wxss";
 @import "../../../style/public/project.wxss";
 
+.form-group.form-sign {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 30rpx;
+}
+
+.form-group.form-sign > view + view {
+        margin-top: 24rpx;
+}
+
 .sign-wrap {
         position: relative;
         border: 1px dashed #dcdcdc;
-        border-radius: 12rpx;
-        padding: 20rpx;
+        border-radius: 16rpx;
+        padding: 30rpx;
         background-color: #fff;
+        min-height: 360rpx;
+        box-sizing: border-box;
 }
 
 .sign-canvas {
         width: 100%;
-        height: 300rpx;
+        height: 420rpx;
+        display: block;
         background-color: #fdfdfd;
 }
 
@@ -28,8 +41,11 @@
 .sign-actions {
         display: flex;
         justify-content: flex-end;
-        margin-top: 20rpx;
-        gap: 20rpx;
+        width: 100%;
+}
+
+.sign-actions .btn + .btn {
+        margin-left: 20rpx;
 }
 
 .sign-actions .btn {

@@ -1,7 +1,7 @@
 <view class="form-group">
         <view class="title"><text wx:if="{{must}}" class="text-red">*</text>{{title}}</view>
 </view>
-<view class="form-group padding">
+<view class="form-group form-sign padding">
         <view class="sign-wrap">
                 <canvas class="sign-canvas" canvas-id="signCanvas" id="signCanvas" disable-scroll="true"
                         bindtouchstart="bindStartSign" bindtouchmove="bindMoveSign" bindtouchend="bindEndSign"></canvas>
