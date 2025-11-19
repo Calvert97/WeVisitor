@@ -112,9 +112,10 @@ Page({
 				title: '提交中'
 			}
 			await cloudHelper.callCloudSumbit('passport/edit_base', data, opts).then(res => {
-				let callback = () => {
-					wx.reLaunch({ url: '../index/my_index' });
-				}
+                                let callback = () => {
+                                        const url = pageHelper.fmtURLByPID('/pages/my/index/my_index');
+                                        wx.switchTab({ url });
+                                }
 				pageHelper.showSuccToast('修改成功', 1500, callback);
 			});
 		} catch (err) {

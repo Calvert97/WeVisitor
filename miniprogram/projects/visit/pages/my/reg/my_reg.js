@@ -34,10 +34,11 @@ Page({
 		let opts = {
 			title: 'bar'
 		}
-		let user = await cloudHelper.callCloudData('passport/my_detail', {}, opts);
-		if (user) {
-			return wx.redirectTo({ url: '../index/my_index' });
-		}
+                let user = await cloudHelper.callCloudData('passport/my_detail', {}, opts);
+                if (user) {
+                        const url = pageHelper.fmtURLByPID('/pages/my/index/my_index');
+                        return wx.switchTab({ url });
+                }
 
 		this.setData({
 			isLoad: true,
@@ -126,8 +127,10 @@ Page({
 							wx.redirectTo({
 								url: this.data.retUrl,
 							})
-						else
-							wx.reLaunch({ url: '../index/my_index' });
+                                                  else {
+                                                          const url = pageHelper.fmtURLByPID('/pages/my/index/my_index');
+                                                          wx.switchTab({ url });
+                                                  }
 					}
 
 					if (projectSetting.USER_REG_CHECK)

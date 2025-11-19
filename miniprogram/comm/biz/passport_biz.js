@@ -153,14 +153,14 @@ class PassportBiz extends BaseBiz {
 					success(result) {
 						if (result.confirm) {
 							let retUrl = encodeURIComponent(pageHelper.getCurrentPageUrlWithArgs());
-							let url = pageHelper.fmtURLByPID('/pages/my/reg/my_reg') + '?retUrl=' + retUrl;
-							wx.redirectTo({ url });
+                                                        let url = pageHelper.fmtURLByPID('/pages/my/reg/my_reg') + '?retUrl=' + retUrl;
+                                                        wx.redirectTo({ url });
 						} else if (result.cancel) {
 							let len = getCurrentPages().length;
-							if (len == 1) {
-								let url = pageHelper.fmtURLByPID('/pages/default/index/default_index');
-								wx.reLaunch({ url });
-							}
+                                                        if (len == 1) {
+                                                                let url = pageHelper.fmtURLByPID('/pages/default/index/default_index');
+                                                                wx.switchTab({ url });
+                                                        }
 							else
 								wx.navigateBack();
 
