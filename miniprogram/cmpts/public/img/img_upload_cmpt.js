@@ -33,6 +33,7 @@ Component({
                         this._ctx.setLineWidth(4);
                         this._ctx.setLineCap('round');
                         this._ctx.setLineJoin('round');
+                        this._lastPoint = null;
 
                         this._bounding = { left: 0, top: 0 };
                         this._canvasSize = { width: 0, height: 0 };
@@ -84,20 +85,26 @@ Component({
                                 isDrawing: true,
                                 hasDrawn: true
                         });
+                        this._lastPoint = point;
                 },
 
                 bindMoveSign: function (e) {
                         if (!this.data.isDrawing || !this._ctx) return;
                         const point = this._getPoint(e);
+                        const startPoint = this._lastPoint || point;
+                        this._ctx.beginPath();
+                        this._ctx.moveTo(startPoint.x, startPoint.y);
                         this._ctx.lineTo(point.x, point.y);
                         this._ctx.stroke();
                         this._ctx.draw(true);
+                        this._lastPoint = point;
                 },
 
                 bindEndSign: function () {
                         this.setData({
                                 isDrawing: false
                         });
+                        this._lastPoint = null;
                 },
 
                 bindClearSign: function () {
@@ -107,6 +114,7 @@ Component({
                         const height = canvasSize.height;
                         this._ctx.clearRect(0, 0, width, height);
                         this._ctx.draw();
+                        this._lastPoint = null;
                         this.setData({
                                 hasDrawn: false,
                                 imgList: []
@@ -139,6 +147,10 @@ Component({
                                 urls: this.data.imgList,
                                 current: this.data.imgList[0]
                         });
+                },
+
+                _getData: function () {
+                        return this.data.imgList || [];
                 }
         }
 });
