@@ -16,9 +16,11 @@
         <view class="form-group avatar-group">
                 <view class="title">微信头像</view>
                 <view class="avatar-row">
-                        <image wx:if="{{userAvatar}}" class="avatar" mode="aspectFill" src="{{userAvatar}}"></image>
-                        <view wx:else class="avatar placeholder">未获取</view>
-                        <button class="btn mini-btn" bindtap="bindSyncProfileTap">同步微信信息</button>
+                        <view class="avatar-preview">
+                                <image wx:if="{{userAvatar}}" class="avatar" mode="aspectFill" src="{{userAvatar}}"></image>
+                                <view wx:else class="avatar placeholder">未获取</view>
+                        </view>
+                        <button class="btn mini-btn sync-btn" bindtap="bindSyncProfileTap">同步微信信息</button>
                 </view>
                 <view class="hint-desc">一键同步微信昵称及头像，快速完成注册</view>
         </view>

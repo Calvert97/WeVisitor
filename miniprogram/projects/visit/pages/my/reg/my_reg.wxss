@@ -21,13 +21,19 @@
 .avatar-group .avatar-row {
         display: flex;
         align-items: center;
-        gap: 20rpx;
+        flex: 1;
         margin-top: 10rpx;
 }
 
-.avatar-group .avatar {
+.avatar-group .avatar-preview {
         width: 120rpx;
         height: 120rpx;
+        margin-right: 20rpx;
+}
+
+.avatar-group .avatar {
+        width: 100%;
+        height: 100%;
         border-radius: 12rpx;
         background: #f7f7f7;
 }
@@ -37,4 +43,13 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        width: 100%;
+        height: 100%;
+        border-radius: 12rpx;
+        background: #f7f7f7;
+}
+
+.avatar-group .sync-btn {
+        flex-shrink: 0;
+        white-space: nowrap;
 }
