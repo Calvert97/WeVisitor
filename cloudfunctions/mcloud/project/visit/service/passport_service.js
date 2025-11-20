@@ -12,12 +12,13 @@ const dataUtil = require('../../../framework/utils/data_util.js');
 class PassportService extends BaseProjectService {
 
 	// 注册
-	async register(userId, {
-		mobile,
-		name,
-		forms,
-		status
-	}) {
+        async register(userId, {
+                mobile,
+                name,
+                forms,
+                status,
+                avatar = ''
+        }) {
 		// 判断是否存在
 		let where = {
 			USER_MINI_OPENID: userId
@@ -32,15 +33,19 @@ class PassportService extends BaseProjectService {
 		cnt = await UserModel.count(where);
 		if (cnt > 0) this.AppError('该手机已注册');
 
-		// 入库
-		let data = {
-			USER_MINI_OPENID: userId,
-			USER_MOBILE: mobile,
-			USER_NAME: name,
-			USER_OBJ: dataUtil.dbForms2Obj(forms),
-			USER_FORMS: forms,
-			USER_STATUS: Number(status)
-		}
+                // 默认昵称使用微信资料
+                name = name || '微信用户';
+
+                // 入库
+                let data = {
+                        USER_MINI_OPENID: userId,
+                        USER_MOBILE: mobile,
+                        USER_NAME: name,
+                        USER_AVATAR: avatar,
+                        USER_OBJ: dataUtil.dbForms2Obj(forms),
+                        USER_FORMS: forms,
+                        USER_STATUS: Number(status)
+                }
 		await UserModel.insert(data);
 
 		return await this.login(userId);
@@ -66,17 +71,18 @@ class PassportService extends BaseProjectService {
 		let where = {
 			USER_MINI_OPENID: userId
 		}
-		let fields = 'USER_MOBILE,USER_NAME,USER_FORMS,USER_OBJ,USER_STATUS,USER_CHECK_REASON'
-		return await UserModel.getOne(where, fields);
+                let fields = 'USER_MOBILE,USER_NAME,USER_AVATAR,USER_FORMS,USER_OBJ,USER_STATUS,USER_CHECK_REASON'
+                return await UserModel.getOne(where, fields);
  
 	}
 
 	/** 修改用户资料 */
-	async editBase(userId, {
-		mobile,
-		name,
-		forms
-	}) {
+        async editBase(userId, {
+                mobile,
+                name,
+                forms,
+                avatar = ''
+        }) {
 		let whereMobile = {
 			USER_MOBILE: mobile,
 			USER_MINI_OPENID: ['<>', userId]
@@ -91,12 +97,13 @@ class PassportService extends BaseProjectService {
 		let user = await UserModel.getOne(where);
 		if (!user) return;
 
-		let data = {
-			USER_MOBILE: mobile,
-			USER_NAME: name,
-			USER_OBJ: dataUtil.dbForms2Obj(forms),
-			USER_FORMS: forms,
-		};
+                let data = {
+                        USER_MOBILE: mobile,
+                        USER_NAME: name,
+                        USER_AVATAR: avatar,
+                        USER_OBJ: dataUtil.dbForms2Obj(forms),
+                        USER_FORMS: forms,
+                };
 
 		if (user.USER_STATUS == UserModel.STATUS.UNCHECK)
 			data.USER_STATUS = UserModel.STATUS.UNUSE;
@@ -105,38 +112,34 @@ class PassportService extends BaseProjectService {
 
 	}
 
-	/** 登录 */
-	async login(userId) {
+        /** 登录 */
+        async login(userId) {
+                let where = {
+                        'USER_MINI_OPENID': userId
+                };
+                let fields = 'USER_ID,USER_MINI_OPENID,USER_STATUS';
+                let user = await UserModel.getOne(where, fields);
+                let token = null;
 
-		let where = {
-			'USER_MINI_OPENID': userId
-		};
-		let fields = 'USER_ID,USER_MINI_OPENID,USER_NAME,USER_PIC,USER_STATUS';
-		let user = await UserModel.getOne(where, fields);
-		let token = {};
-		if (user) {
+                if (user) {
+                        token = {
+                                id: user.USER_MINI_OPENID,
+                                key: user.USER_ID,
+                                status: user.USER_STATUS,
+                        };
 
-			// 正常用户
-			token.id = user.USER_MINI_OPENID;
-			token.key = user.USER_ID;
-			token.name = user.USER_NAME;
-			token.pic = user.USER_PIC;
-			token.status = user.USER_STATUS;
+                        // 异步更新最近更新时间
+                        let dataUpdate = {
+                                USER_LOGIN_TIME: this._timestamp
+                        };
+                        UserModel.edit(where, dataUpdate);
+                        UserModel.inc(where, 'USER_LOGIN_CNT', 1);
+                }
 
-			// 异步更新最近更新时间
-			let dataUpdate = {
-				USER_LOGIN_TIME: this._timestamp
-			};
-			UserModel.edit(where, dataUpdate);
-			UserModel.inc(where, 'USER_LOGIN_CNT', 1);
-
-		} else
-			token = null;
-
-		return {
-			token
-		};
-	}
+                return {
+                        token
+                };
+        }
 
 
 

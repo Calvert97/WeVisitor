@@ -1,12 +1,71 @@
-@import "../../../style/base/comm.wxss"; 
-@import "../../../style/public/project.wxss";  
+@import "../../../style/base/comm.wxss";
+@import "../../../style/public/project.wxss";
 
-.form-group .upload-img .img-no {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    border-top-left-radius: 6rpx;
-    padding: 6rpx 12rpx;
-    height: 35rpx;
-    opacity: .9;
+.form-group.form-sign {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 30rpx;
+}
+
+.form-group.form-sign > view + view {
+        margin-top: 24rpx;
+}
+
+.sign-wrap {
+        position: relative;
+        border: 1px dashed #dcdcdc;
+        border-radius: 16rpx;
+        padding: 30rpx;
+        background-color: #fff;
+        min-height: 360rpx;
+        box-sizing: border-box;
+}
+
+.sign-canvas {
+        width: 100%;
+        height: 420rpx;
+        display: block;
+        background-color: #fdfdfd;
+}
+
+.sign-placeholder {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        color: #999;
+        font-size: 26rpx;
+        pointer-events: none;
+}
+
+.sign-actions {
+        display: flex;
+        justify-content: flex-end;
+        width: 100%;
+}
+
+.sign-actions .btn + .btn {
+        margin-left: 20rpx;
+}
+
+.sign-actions .btn {
+        padding: 0 32rpx;
+}
+
+.sign-actions .btn-primary {
+        background-color: var(--theme-color);
+        color: #fff;
+}
+
+.sign-preview {
+        margin-top: 30rpx;
+        text-align: center;
+        color: #888;
+}
+
+.sign-preview image {
+        width: 100%;
+        border-radius: 12rpx;
+        border: 1px solid #f0f0f0;
+        margin-bottom: 12rpx;
 }

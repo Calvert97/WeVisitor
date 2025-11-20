@@ -17,7 +17,22 @@ class AdminNewsService extends BaseProjectAdminService {
 
 	/** 推荐首页SETUP */
 	async vouchNewsSetup(id, vouch) {
-		this.AppError('[访客]该功能暂不开放，如有需要请加作者微信：cclinux0730');
+		let homeService = new AdminHomeService();
+		if (vouch == 1) {
+			let news = await NewsModel.getOne(id, 'NEWS_TITLE,NEWS_DESC,NEWS_PIC');
+			if (!news) return;
+			let node = {
+				id,
+				title: news.NEWS_TITLE,
+				desc: news.NEWS_DESC,
+				cover: (news.NEWS_PIC && news.NEWS_PIC[0]) ? news.NEWS_PIC[0] : '',
+				url: `/projects/visit/pages/news/detail/news_detail?id=${id}`,
+				type: 'news'
+			};
+			await homeService.updateHomeVouch(node);
+		} else {
+			await homeService.delHomeVouch(id);
+		}
 	}
 
 	/**添加资讯 */
@@ -29,17 +44,121 @@ class AdminNewsService extends BaseProjectAdminService {
 		desc = '',
 		forms
 	}) {
+		let data = {
+			NEWS_TITLE: title,
+			NEWS_CATE_ID: cateId,
+			NEWS_CATE_NAME: cateName,
+			NEWS_ORDER: Number(order),
+			NEWS_DESC: desc,
+			NEWS_FORMS: forms,
+			NEWS_OBJ: dataUtil.dbForms2Obj(forms)
+		};
 
-
-		this.AppError('[访客]该功能暂不开放，如有需要请加作者微信：cclinux0730');
+		let id = await NewsModel.insert(data);
+		return { id };
 	}
 
 	/**删除资讯数据 */
 	async delNews(id) {
-		this.AppError('[访客]该功能暂不开放，如有需要请加作者微信：cclinux0730');
+		let news = await NewsModel.getOne(id, 'NEWS_PIC,NEWS_CONTENT,NEWS_FORMS');
+		if (!news)
+			this.AppError('记录不存在');
 
+		await NewsModel.del(id);
+		await this.vouchNewsSetup(id, 0);
+		await cloudUtil.handlerCloudFiles(news.NEWS_PIC || [], []);
+		await cloudUtil.handlerCloudFilesByRichEditor(news.NEWS_CONTENT || [], []);
+		await cloudUtil.handlerCloudFilesForForms(news.NEWS_FORMS || [], []);
 	}
 
+	// 更新forms信息
+	async updateNewsForms({
+		id,
+		hasImageForms
+	}) {
+		if (!hasImageForms || hasImageForms.length == 0) return [];
+		let oldForms = await NewsModel.getOneField(id, 'NEWS_FORMS');
+		await NewsModel.editForms(id, 'NEWS_FORMS', 'NEWS_OBJ', hasImageForms);
+		let newForms = await NewsModel.getOneField(id, 'NEWS_FORMS');
+		await cloudUtil.handlerCloudFilesForForms(oldForms || [], newForms || []);
+		return newForms;
+	}
+
+	/**
+	 * 更新富文本详细的内容及图片信息
+	 * @returns 返回 urls数组 [url1, url2, url3, ...]
+	 */
+	async updateNewsContent({
+		id,
+		content // 富文本数组
+	}) {
+		let news = await NewsModel.getOne(id, 'NEWS_CONTENT');
+		if (!news)
+			this.AppError('记录不存在');
+
+		await NewsModel.edit(id, { NEWS_CONTENT: content });
+		await cloudUtil.handlerCloudFilesByRichEditor(news.NEWS_CONTENT || [], content || []);
+		return content;
+	}
+
+	/**
+	 * 更新资讯图片信息
+	 * @returns 返回 urls数组 [url1, url2, url3, ...]
+	 */
+	async updateNewsPic({
+		id,
+		imgList // 图片数组
+	}) {
+		let news = await NewsModel.getOne(id, 'NEWS_PIC');
+		if (!news)
+			this.AppError('记录不存在');
+
+		await cloudUtil.handlerCloudFiles(news.NEWS_PIC || [], imgList || []);
+		await NewsModel.edit(id, { NEWS_PIC: imgList });
+		return { urls: imgList };
+	}
+
+	/**更新资讯数据 */
+	async editNews({
+		id,
+		title,
+		cateId, //分类
+		cateName,
+		order,
+		desc = '',
+		forms
+	}) {
+		let news = await NewsModel.getOne(id, '_id');
+		if (!news)
+			this.AppError('记录不存在');
+
+		let data = {
+			NEWS_TITLE: title,
+			NEWS_CATE_ID: cateId,
+			NEWS_CATE_NAME: cateName,
+			NEWS_ORDER: Number(order),
+			NEWS_DESC: desc,
+			NEWS_FORMS: forms,
+			NEWS_OBJ: dataUtil.dbForms2Obj(forms)
+		};
+		await NewsModel.edit(id, data);
+	}
+
+	/**修改资讯状态 */
+	async statusNews(id, status) {
+		await NewsModel.edit(id, { NEWS_STATUS: Number(status) });
+	}
+
+	/**置顶与排序设定 */
+	async sortNews(id, sort) {
+		await NewsModel.edit(id, { NEWS_ORDER: Number(sort) });
+	}
+
+	/**首页设定 */
+	async vouchNews(id, vouch) {
+		await NewsModel.edit(id, { NEWS_VOUCH: Number(vouch) });
+		await this.vouchNewsSetup(id, vouch);
+	}
 	/**获取资讯信息 */
 	async getNewsDetail(id) {
 		let fields = '*';
@@ -53,55 +172,6 @@ class AdminNewsService extends BaseProjectAdminService {
 		return news;
 	}
 
-	// 更新forms信息
-	async updateNewsForms({
-		id,
-		hasImageForms
-	}) {
-		this.AppError('[访客]该功能暂不开放，如有需要请加作者微信：cclinux0730');
-	}
-
-
-	/**
-	 * 更新富文本详细的内容及图片信息
-	 * @returns 返回 urls数组 [url1, url2, url3, ...]
-	 */
-	async updateNewsContent({
-		id,
-		content // 富文本数组
-	}) {
-
-		this.AppError('[访客]该功能暂不开放，如有需要请加作者微信：cclinux0730');
-
-	}
-
-	/**
-	 * 更新资讯图片信息
-	 * @returns 返回 urls数组 [url1, url2, url3, ...]
-	 */
-	async updateNewsPic({
-		id,
-		imgList // 图片数组
-	}) {
-
-		this.AppError('[访客]该功能暂不开放，如有需要请加作者微信：cclinux0730');
-
-	}
-
-
-	/**更新资讯数据 */
-	async editNews({
-		id,
-		title,
-		cateId, //分类
-		cateName,
-		order,
-		desc = '',
-		forms
-	}) {
-
-		this.AppError('[访客]该功能暂不开放，如有需要请加作者微信：cclinux0730');
-	}
 
 	/**取得资讯分页列表 */
 	async getAdminNewsList({
@@ -160,21 +230,6 @@ class AdminNewsService extends BaseProjectAdminService {
 		}
 
 		return await NewsModel.getList(where, fields, orderBy, page, size, isTotal, oldTotal);
-	}
-
-	/**修改资讯状态 */
-	async statusNews(id, status) {
-		this.AppError('[访客]该功能暂不开放，如有需要请加作者微信：cclinux0730');
-	}
-
-	/**置顶与排序设定 */
-	async sortNews(id, sort) {
-		this.AppError('[访客]该功能暂不开放，如有需要请加作者微信：cclinux0730');
-	}
-
-	/**首页设定 */
-	async vouchNews(id, vouch) {
-		this.AppError('[访客]该功能暂不开放，如有需要请加作者微信：cclinux0730');
 	}
 }
 

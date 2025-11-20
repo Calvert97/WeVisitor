@@ -17,10 +17,11 @@ UserModel.DB_STRUCTURE = {
 
 	USER_MINI_OPENID: 'string|true|comment=小程序openid',
 	USER_STATUS: 'int|true|default=1|comment=状态 0=待审核,1=正常,8=审核未过,9=禁用',
-	USER_CHECK_REASON: 'string|false|comment=审核未过的理由',
+        USER_CHECK_REASON: 'string|false|comment=审核未过的理由',
 
-	USER_NAME: 'string|false|comment=用户昵称',
-	USER_MOBILE: 'string|false|comment=联系电话',
+        USER_NAME: 'string|false|comment=用户昵称',
+        USER_AVATAR: 'string|false|comment=微信头像',
+        USER_MOBILE: 'string|false|comment=联系电话',
 
 	USER_FORMS: 'array|true|default=[]',
 	USER_OBJ: 'object|true|default={}',

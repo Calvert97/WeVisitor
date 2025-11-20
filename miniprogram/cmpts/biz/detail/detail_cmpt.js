@@ -180,8 +180,8 @@ Component({
 			if (!url)
 				url = pageHelper.fmtURLByPID('/pages/default/index/default_index');
 
-			wx.reLaunch({ url });
-		}, 
+                        wx.switchTab({ url });
+                },
 		top: function (e) {
 			// 回页首事件
 			pageHelper.top();

@@ -96,9 +96,8 @@ Page({
                 let cb = () => {
                     PublicBiz.removeCacheList('my-task-list');
 
-                    wx.reLaunch({
-                        url: '../my_list/task_my_list'
-                    });
+                    const url = pageHelper.fmtURLByPID('/pages/task/my_list/task_my_list');
+                    wx.switchTab({ url });
                 }
                 pageHelper.showNoneToast('填报完成，请耐心等待审批', 2000, cb);
 

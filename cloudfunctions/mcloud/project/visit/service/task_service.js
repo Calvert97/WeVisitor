@@ -93,36 +93,99 @@ class TaskService extends BaseProjectService {
 
 
 	/**添加 */
-	async insertTask(userId, {
-		forms
-	}) {
+        async insertTask(userId, {
+                forms
+        }) {
+                if (!forms || !Array.isArray(forms) || forms.length == 0)
+                        this.AppError('请完善申请信息');
 
-		this.AppError('[访客]该功能暂不开放，如有需要请加作者微信：cclinux0730');
-	}
+                if (userId) {
+                        let user = await UserModel.getOne({ USER_MINI_OPENID: userId }, 'USER_STATUS');
+                        if (!user)
+                                this.AppError('用户不存在');
+                        if (user.USER_STATUS == UserModel.STATUS.FORBID)
+                                this.AppError('当前账号暂不允许提交申请');
+                }
+
+                let taskObj = dataUtil.dbForms2Obj(forms);
+
+                let data = {
+                        TASK_FORMS: forms,
+                        TASK_OBJ: taskObj,
+                        TASK_USER_ID: userId || '',
+                        TASK_TYPE: userId ? 0 : 1,
+                        TASK_STATUS: TaskModel.STATUS.WAIT
+                };
+
+                let taskId = await TaskModel.insert(data);
+
+                return { id: taskId };
+        }
 
 
 	/**修改 */
-	async editTask({
-		id,
-		forms
-	}, formsName = 'TASK_FORMS', objName = 'TASK_OBJ') {
+        async editTask({
+                id,
+                forms
+        }, formsName = 'TASK_FORMS', objName = 'TASK_OBJ') {
 
-		this.AppError('[访客]该功能暂不开放，如有需要请加作者微信：cclinux0730');
-	}
+                if (!forms || !Array.isArray(forms) || forms.length == 0)
+                        this.AppError('请完善申请信息');
+
+                let where = {
+                        _id: id
+                };
+
+                let task = await TaskModel.getOne(where, '_id');
+                if (!task)
+                        this.AppError('记录不存在');
+
+                let data = {
+                        [formsName]: forms,
+                        [objName]: dataUtil.dbForms2Obj(forms),
+                        TASK_STATUS: TaskModel.STATUS.WAIT,
+                        TASK_SUCC_ADMIN_ID: '',
+                        TASK_SUCC_ADMIN_NAME: '',
+                        TASK_SUCC_TIME: 0,
+                        TASK_FAIL_ADMIN_ID: '',
+                        TASK_FAIL_ADMIN_NAME: '',
+                        TASK_FAIL_TIME: 0,
+                        TASK_OVER_ADMIN_ID: '',
+                        TASK_OVER_ADMIN_NAME: '',
+                        TASK_OVER_TIME: 0
+                };
+
+                await TaskModel.edit(where, data);
+
+                return { id };
+        }
 
 	// 更新forms信息
-	async updateTaskForms({
-		id,
-		hasImageForms
-	}, formsName = 'TASK_FORMS', objName = 'TASK_OBJ') {
-		this.AppError('[访客]该功能暂不开放，如有需要请加作者微信：cclinux0730');
-	}
+        async updateTaskForms({
+                id,
+                hasImageForms
+        }, formsName = 'TASK_FORMS', objName = 'TASK_OBJ') {
+                if (!hasImageForms || hasImageForms.length == 0) return;
+
+                let oldForms = await TaskModel.getOneField(id, formsName);
+                await TaskModel.editForms(id, formsName, objName, hasImageForms);
+                let newForms = await TaskModel.getOneField(id, formsName);
+                await cloudUtil.handlerCloudFilesForForms(oldForms || [], newForms || []);
+        }
 
 	/**删除数据 */
-	async delTask(userId, id, isAdmin) {
-		this.AppError('[访客]该功能暂不开放，如有需要请加作者微信：cclinux0730');
+        async delTask(userId, id, isAdmin) {
+                let where = { _id: id };
+                if (!isAdmin)
+                        where.TASK_USER_ID = userId;
 
-	}
+                let task = await TaskModel.getOne(where, 'TASK_FORMS');
+                if (!task)
+                        this.AppError('记录不存在或没有权限');
+
+                await TaskModel.del(where);
+                await cloudUtil.handlerCloudFilesForForms(task.TASK_FORMS || [], []);
+        }
 
 
 
