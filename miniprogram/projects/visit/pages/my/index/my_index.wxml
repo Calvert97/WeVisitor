@@ -2,12 +2,12 @@
 	<!--top area begin-->
 	<view class="upside upside-shadow" bindtap="url" data-url="{{user?'../edit/my_edit':'../reg/my_reg'}}">
 		<image mode="widthFix" lazy-load class="upImg loading" src="../../../images/my.jpg" />
-		<view class="user-bar">
-			<view class="avatar">
-				<image mode="aspectFit" src="../../../images/tabbar/my_cur.png" />
-			</view>
-			<view class="detail">
-				<view class="name text-cut">{{user?user.USER_NAME:'欢迎回家~~~'}}</view>
+                <view class="user-bar">
+                        <view class="avatar">
+                                <image mode="aspectFit" src="{{user&&user.USER_AVATAR?user.USER_AVATAR:'../../../images/tabbar/my_cur.png'}}" />
+                        </view>
+                        <view class="detail">
+                                <view class="name text-cut">{{user?user.USER_NAME:'欢迎回家~~~'}}</view>
 				<view class="desc">
 					<view wx:if="{{user&&user.USER_STATUS==9}}" class="tag small radius bg-purple light">已禁用</view>
 					<view wx:elif="{{user&&user.USER_STATUS==0}}" class="tag small radius bg-orange light">已注册，待审核</view>

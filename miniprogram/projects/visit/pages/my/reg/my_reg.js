@@ -11,12 +11,13 @@ Page({
 	/**
 	 * 页面的初始数据
 	 */
-	data: {
-		isLoad: false,
-		isEdit: false,
+        data: {
+                isLoad: false,
+                isEdit: false,
 
-		mobileCheck: setting.MOBILE_CHECK
-	},
+                userAvatar: '',
+                mobileCheck: setting.MOBILE_CHECK
+        },
 
 	/**
 	 * 生命周期函数--监听页面加载
@@ -41,15 +42,15 @@ Page({
                 }
 
 		this.setData({
-			isLoad: true,
+                        isLoad: true,
 
-			fields: projectSetting.USER_FIELDS,
+                        fields: projectSetting.USER_FIELDS,
 
-			formName: '',
-			formMobile: '',
-			formForms: []
-		});
-	},
+                        formName: '',
+                        formMobile: '',
+                        formForms: []
+                });
+        },
 
 	/**
 	 * 生命周期函数--监听页面初次渲染完成
@@ -92,24 +93,34 @@ Page({
 
 	},
 
-	bindGetPhoneNumber: async function (e) {
-		PassportBiz.getPhone(e, this);
-	},
+        bindGetPhoneNumber: async function (e) {
+                PassportBiz.getPhone(e, this);
+        },
+
+        bindSyncProfileTap: async function () {
+                try {
+                        await PassportBiz.syncWechatProfile(this);
+                } catch (err) {
+                        console.warn(err);
+                }
+        },
 
 
-	bindSubmitTap: async function (e) {
-		try {
-			let data = this.data;
+        bindSubmitTap: async function (e) {
+                try {
+                        let data = this.data;
 
 			// 数据校验 
 			data = validate.check(data, PassportBiz.CHECK_FORM, this);
 			if (!data) return;
 
-			let forms = this.selectComponent("#cmpt-form").getForms(true);
-			if (!forms) return;
-			data.forms = forms;
+                        let forms = this.selectComponent("#cmpt-form").getForms(true);
+                        if (!forms) return;
+                        data.forms = forms;
 
-			data.status = projectSetting.USER_REG_CHECK ? 0 : 1;
+                        data.avatar = data.userAvatar;
+
+                        data.status = projectSetting.USER_REG_CHECK ? 0 : 1;
 
 			let opts = {
 				title: '提交中'

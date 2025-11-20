@@ -52,11 +52,37 @@ class PassportBiz extends BaseBiz {
 		return token.id || '';
 	}
 
-	static getStatus() {
-		let token = cacheHelper.get(constants.CACHE_TOKEN);
-		if (!token) return -1;
-		return token.status || -1;
-	}
+        static getStatus() {
+                let token = cacheHelper.get(constants.CACHE_TOKEN);
+                if (!token) return -1;
+                return token.status || -1;
+        }
+
+        // 同步微信用户资料
+        static async syncWechatProfile(that) {
+                return new Promise((resolve, reject) => {
+                        wx.getUserProfile({
+                                desc: '用于完善个人资料',
+                                success: res => {
+                                        let userInfo = res.userInfo || {};
+                                        let setData = {};
+                                        if (userInfo.nickName)
+                                                setData.formName = userInfo.nickName;
+                                        if (userInfo.avatarUrl)
+                                                setData.userAvatar = userInfo.avatarUrl;
+
+                                        if (Object.keys(setData).length && that)
+                                                that.setData(setData);
+
+                                        resolve(userInfo);
+                                },
+                                fail: err => {
+                                        pageHelper.showNoneToast('需要授权微信头像昵称');
+                                        reject(err);
+                                }
+                        });
+                });
+        }
 
 	// 是否登录 
 	static isLogin() {
@@ -240,9 +266,10 @@ class PassportBiz extends BaseBiz {
 
 /** 表单校验    */
 PassportBiz.CHECK_FORM = {
-	name: 'formName|must|string|min:1|max:30|name=昵称',
-	mobile: 'formMobile|must|len:11|name=手机',
-	forms: 'formForms|array'
+        name: 'formName|must|string|min:1|max:30|name=昵称',
+        avatar: 'userAvatar|string|max:500|name=微信头像',
+        mobile: 'formMobile|must|len:11|name=手机',
+        forms: 'formForms|array'
 };
 
 

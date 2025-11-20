@@ -34,14 +34,15 @@ class PassportController extends BaseProjectController {
 
 
 	/** 注册 */
-	async register() {
-		// 数据校验
-		let rules = {
-			name: 'must|string|min:1|max:30|name=姓名',
-			mobile: 'must|mobile|name=手机',
-			forms: 'array|name=表单',
-			status: 'int|default=1'
-		};
+        async register() {
+                // 数据校验
+                let rules = {
+                        name: 'must|string|min:1|max:30|name=姓名',
+                        avatar: 'string|max:500|name=微信头像',
+                        mobile: 'must|mobile|name=手机',
+                        forms: 'array|name=表单',
+                        status: 'int|default=1'
+                };
 
 		// 取得数据
 		let input = this.validateData(rules);
@@ -54,13 +55,14 @@ class PassportController extends BaseProjectController {
 	}
 
 	/** 修改用户资料 */
-	async editBase() {
-		// 数据校验
-		let rules = {
-			name: 'must|string|min:1|max:30|name=姓名',
-			mobile: 'must|mobile|name=手机',
-			forms: 'array|name=表单',
-		};
+        async editBase() {
+                // 数据校验
+                let rules = {
+                        name: 'must|string|min:1|max:30|name=姓名',
+                        avatar: 'string|max:500|name=微信头像',
+                        mobile: 'must|mobile|name=手机',
+                        forms: 'array|name=表单',
+                };
 
 		// 取得数据
 		let input = this.validateData(rules);
